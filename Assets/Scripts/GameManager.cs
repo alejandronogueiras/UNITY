@@ -10,8 +10,8 @@ public class GameManager : MonoBehaviour
     public bool juegoTerminado = false;
 
     [Header("UI")]
-    public GameObject winPanelOrText; // arrastra aquí WinText (o un Panel)
-
+    public GameObject winPanelOrText;
+    public GameObject losePanelOrText;   
     void Awake()
     {
         if (instance != null && instance != this)
@@ -26,6 +26,9 @@ public class GameManager : MonoBehaviour
     {
         if (winPanelOrText != null)
             winPanelOrText.SetActive(false);
+
+        if (losePanelOrText != null)
+            losePanelOrText.SetActive(false);
     }
 
     public void Ganar()
@@ -36,10 +39,23 @@ public class GameManager : MonoBehaviour
         if (winPanelOrText != null)
             winPanelOrText.SetActive(true);
 
-        // Para TODO el juego
-        Time.timeScale = 0f;
+        FinalizarJuego();
+    }
 
-        // Libera el cursor
+    public void Perder()   
+    {
+        if (juegoTerminado) return;
+        juegoTerminado = true;
+
+        if (losePanelOrText != null)
+            losePanelOrText.SetActive(true);
+
+        FinalizarJuego();
+    }
+
+    void FinalizarJuego()
+    {
+        Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }

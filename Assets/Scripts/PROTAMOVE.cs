@@ -11,22 +11,50 @@ public class PlayerLookMove : MonoBehaviour
 
     [Header("Animator")]
     public Animator animator;
-    public string speedParam = "Speed"; // nombre del parámetro en tu Animator
+    public string velXParam = "VelX";
+    public string velYParam = "VelY";
 
     [Header("Look")]
     public Transform cameraTransform;
     public float mouseSensitivity = 2f;
     public float maxLookUp = 80f;
 
-    [Header("Sigilo")]
-    public float radioRuido = 4f;
+    [Header("Sigilo y Ruido (Pulsos)")]
+    public float radioRuidoNormal = 4f;
+    public float radioRuidoSigilo = 2f;
+
+    public bool estaEnSigilo = false;
+
+    [HideInInspector] public float radioActual; 
+    [HideInInspector] public float radioRuido;  
     public bool estaHaciendoRuido = false;
+
+    [Header("Configuración de Pasos")]
+    public float tiempoEntrePasos = 0.5f;
+    public float duracionDelPulso = 0.15f;
+
+    [Header("Suelo metálico")]
+    public bool enSueloMetalico = false;
+    public float multRuidoMetalico = 1f;
+
+
+    public float RadioRuidoActual => radioActual * multRuidoMetalico;
+
+    public void SetMetalFloor(bool activo, float mult)
+    {
+        enSueloMetalico = activo;
+        multRuidoMetalico = activo ? mult : 1f;
+    }
 
     private CharacterController cc;
     private float pitch;
     private float verticalVelocity;
 
-    // Línea visual del ruido
+
+    private float temporizadorPasos = 0f;
+    private float temporizadorPulso = 0f;
+
+ 
     private LineRenderer lineaRuido;
 
     void Awake()
@@ -40,6 +68,11 @@ public class PlayerLookMove : MonoBehaviour
     void Start()
     {
         lineaRuido = CrearLineaVisual(Color.yellow);
+
+        radioActual = radioRuidoNormal;
+        radioRuido = radioActual;
+
+        temporizadorPasos = tiempoEntrePasos;
     }
 
     void OnEnable()
@@ -50,11 +83,30 @@ public class PlayerLookMove : MonoBehaviour
 
     void Update()
     {
+  
+        if (GameManager.instance != null && GameManager.instance.juegoTerminado) return;
+
         var kb = Keyboard.current;
 
-        // --- INPUT (New Input System) ---
-        float x = 0f; // rotación (A/D)
-        float y = 0f; // avanzar (W/S)
+    
+        float velocidadActual = runSpeed;
+        radioActual = radioRuidoNormal;
+
+       estaEnSigilo = false;
+
+        if (kb != null && kb.leftShiftKey.isPressed)
+        {
+            velocidadActual = runSpeed / 2f;
+            radioActual = radioRuidoSigilo;
+            estaEnSigilo = true; 
+        }
+
+  
+        radioRuido = radioActual;
+
+
+        float x = 0f; 
+        float y = 0f; 
 
         if (kb != null)
         {
@@ -65,62 +117,79 @@ public class PlayerLookMove : MonoBehaviour
             if (kb.sKey.isPressed) y -= 1f;
         }
 
-        // --- ROTACIÓN (A/D) ---
+
         transform.Rotate(0f, x * rotationSpeed * Time.deltaTime, 0f);
 
-        // --- MOVIMIENTO (W/S) ---
-        Vector3 move = (transform.forward * y + transform.right * x) * runSpeed;
 
-        // --- SISTEMA DE RUIDO ---
-        estaHaciendoRuido = Mathf.Abs(y) > 0.1f;
+        Vector3 move = transform.forward * (y * velocidadActual);
+
+
+        bool seEstaMoviendo = Mathf.Abs(y) > 0.1f;
+
+        if (seEstaMoviendo)
+        {
+            temporizadorPasos += Time.deltaTime;
+
+            if (temporizadorPasos >= tiempoEntrePasos)
+            {
+                estaHaciendoRuido = true;
+                temporizadorPasos = 0f;
+                temporizadorPulso = duracionDelPulso;
+            }
+        }
+        else
+        {
+            temporizadorPasos = tiempoEntrePasos; 
+        }
+
+        if (estaHaciendoRuido)
+        {
+            temporizadorPulso -= Time.deltaTime;
+            if (temporizadorPulso <= 0f) estaHaciendoRuido = false;
+        }
+
+ 
         if (lineaRuido != null)
         {
             lineaRuido.enabled = estaHaciendoRuido;
-            if (estaHaciendoRuido) DibujarCirculo(lineaRuido, radioRuido);
+            if (estaHaciendoRuido) DibujarCirculo(lineaRuido, RadioRuidoActual);
         }
 
-        // --- GRAVEDAD ---
+
         if (cc.isGrounded && verticalVelocity < 0f)
-            verticalVelocity = -1f; // pegado al suelo (ajusta entre -0.5 y -2 si hace falta)
+            verticalVelocity = -1f;
 
         verticalVelocity += gravity * Time.deltaTime;
         move.y = verticalVelocity;
 
         cc.Move(move * Time.deltaTime);
 
-        // --- ANIMATOR (Idle/Walk) ---
         if (animator != null)
         {
-            // 0 en idle, 1 andando (o usa Mathf.Abs(y) si prefieres valor continuo)
-            animator.SetFloat("VelX", x);
-            animator.SetFloat("VelY", y);
+
+            animator.SetFloat(velXParam, 0f);
+            animator.SetFloat(velYParam, y);
         }
 
-        // --- MIRAR CON RATÓN ---
         if (Mouse.current != null && cameraTransform != null)
         {
             Vector2 delta = Mouse.current.delta.ReadValue();
 
-            // yaw -> personaje
             float yaw = delta.x * mouseSensitivity * Time.deltaTime * 60f;
             transform.Rotate(Vector3.up * yaw);
 
-            // pitch -> cámara
             float look = delta.y * mouseSensitivity * Time.deltaTime * 60f;
             pitch -= look;
             pitch = Mathf.Clamp(pitch, -maxLookUp, maxLookUp);
             cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
         }
 
-        // ESC libera ratón
         if (kb != null && kb.escapeKey.wasPressedThisFrame)
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
     }
-
-    // ---------- LINE RENDERER ----------
 
     LineRenderer CrearLineaVisual(Color color)
     {

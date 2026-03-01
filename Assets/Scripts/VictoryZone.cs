@@ -32,7 +32,7 @@ public class VictoryZone : MonoBehaviour
             }
             else
             {
-                Debug.Log("❌ Necesitas la llave");
+                Debug.Log(" Necesitas la llave");
             }
         }
     }
