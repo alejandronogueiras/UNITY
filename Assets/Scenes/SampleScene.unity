@@ -275,17 +275,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  radioInvestigacion: 5
   estadoActual: 0
+  estadoAnterior: 0
   vision: {fileID: 19663825}
   hearing: {fileID: 19663826}
   patrol: {fileID: 19663822}
-  jugador: {fileID: 940091386}
-  salida: {fileID: 1861350397}
-  zonaLlaveCentro: {fileID: 26787739}
-  zonaLlaveRadio: 15
-  velocidadNormal: 2
-  velocidadPersecucion: 3.5
+  investigate: {fileID: 1598265367}
+  chase: {fileID: 1598265366}
+  search: {fileID: 1598265365}
+  checkKey: {fileID: 1598265364}
+  guardExit: {fileID: 1598265363}
   animator: {fileID: 19663821}
   animSmooth: 8
 --- !u!114 &19663825
@@ -1012,6 +1011,21 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1598265362}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1598265366}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1598265364}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1598265363}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1598265367}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1598265365}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!4 &274165669 stripped
 Transform:
@@ -4936,17 +4950,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  radioInvestigacion: 5
   estadoActual: 0
+  estadoAnterior: 0
   vision: {fileID: 1064020785}
   hearing: {fileID: 1064020786}
   patrol: {fileID: 1064020782}
-  jugador: {fileID: 940091386}
-  salida: {fileID: 1861350397}
-  zonaLlaveCentro: {fileID: 26787739}
-  zonaLlaveRadio: 15
-  velocidadNormal: 4
-  velocidadPersecucion: 6
+  investigate: {fileID: 1598265367}
+  chase: {fileID: 1598265366}
+  search: {fileID: 1598265365}
+  checkKey: {fileID: 1598265364}
+  guardExit: {fileID: 1598265363}
   animator: {fileID: 1064020781}
   animSmooth: 8
 --- !u!114 &1064020785
@@ -7772,17 +7785,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  radioInvestigacion: 5
   estadoActual: 0
+  estadoAnterior: 0
   vision: {fileID: 1598265356}
   hearing: {fileID: 1598265357}
   patrol: {fileID: 1598265362}
-  jugador: {fileID: 940091386}
-  salida: {fileID: 1861350397}
-  zonaLlaveCentro: {fileID: 26787739}
-  zonaLlaveRadio: 15
-  velocidadNormal: 3.5
-  velocidadPersecucion: 6.5
+  investigate: {fileID: 1598265367}
+  chase: {fileID: 1598265366}
+  search: {fileID: 1598265365}
+  checkKey: {fileID: 1598265364}
+  guardExit: {fileID: 1598265363}
   animator: {fileID: 1598265360}
   animSmooth: 8
 --- !u!114 &1598265356
@@ -7866,6 +7878,79 @@ MonoBehaviour:
     radio: 20
   aleatorio: 1
   waitTime: 1
+--- !u!114 &1598265363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598265353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92eff7254a73b4441aea0f08bccf4183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuardExitBehaviour
+  salida: {fileID: 0}
+  velocidadNormal: 3.5
+--- !u!114 &1598265364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598265353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a11b2ed26aa2203429e73f874bf51cf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CheckKeyBehaviour
+  zonaLlaveCentro: {fileID: 0}
+  zonaLlaveRadio: 8
+  velocidadNormal: 3.5
+  protegiendoLlave: 0
+  llaveRobada: 0
+--- !u!114 &1598265365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598265353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a526cc6e9ce34654cbb9ccf18bb96696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SearchBehaviour
+  velocidadNormal: 3.5
+--- !u!114 &1598265366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598265353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 012e73e41915c8c40ae4e3392382e002, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChaseBehaviour
+  jugador: {fileID: 0}
+  velocidadPersecucion: 6.5
+--- !u!114 &1598265367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598265353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8501ccc9d768f7047b63f496d4391e0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InvestigateBehaviour
+  velocidadNormal: 3.5
+  tiempoInvestigacion: 4
+  radioInvestigacion: 5
 --- !u!4 &1606636647 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4740601507822456562, guid: fe446090689991a4c815393f1efc07d0, type: 3}
@@ -8907,17 +8992,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  radioInvestigacion: 5
   estadoActual: 0
+  estadoAnterior: 0
   vision: {fileID: 1924833737}
   hearing: {fileID: 1924833738}
   patrol: {fileID: 1924833734}
-  jugador: {fileID: 940091386}
-  salida: {fileID: 1861350397}
-  zonaLlaveCentro: {fileID: 26787739}
-  zonaLlaveRadio: 15
-  velocidadNormal: 5.5
-  velocidadPersecucion: 7.5
+  investigate: {fileID: 1598265367}
+  chase: {fileID: 1598265366}
+  search: {fileID: 1598265365}
+  checkKey: {fileID: 1598265364}
+  guardExit: {fileID: 1598265363}
   animator: {fileID: 1924833741}
   animSmooth: 8
 --- !u!114 &1924833737
