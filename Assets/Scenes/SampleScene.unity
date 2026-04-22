@@ -207,6 +207,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 19663822}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 19663830}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!1 &19663820 stripped
 GameObject:
@@ -320,6 +323,21 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   rangoCerca: 10
   rangoLejos: 15
+--- !u!114 &19663830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19663820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 012e73e41915c8c40ae4e3392382e002, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChaseBehaviour
+  jugador: {fileID: 940091386}
+  velocidadPersecucion: 6.5
+  distanciaCaptura: 1.5
 --- !u!1 &26453003
 GameObject:
   m_ObjectHideFlags: 0
@@ -2217,6 +2235,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1924833734}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1924833745}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!4 &398160271 stripped
 Transform:
@@ -4882,6 +4903,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1064020782}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1064020790}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!1 &1064020780 stripped
 GameObject:
@@ -4995,6 +5019,21 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   rangoCerca: 3
   rangoLejos: 7
+--- !u!114 &1064020790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064020780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 012e73e41915c8c40ae4e3392382e002, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChaseBehaviour
+  jugador: {fileID: 940091386}
+  velocidadPersecucion: 6.5
+  distanciaCaptura: 1.5
 --- !u!4 &1064082310 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4740601507822456562, guid: fe446090689991a4c815393f1efc07d0, type: 3}
@@ -7934,8 +7973,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 012e73e41915c8c40ae4e3392382e002, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChaseBehaviour
-  jugador: {fileID: 0}
+  jugador: {fileID: 940091386}
   velocidadPersecucion: 6.5
+  distanciaCaptura: 1.5
 --- !u!114 &1598265367
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9042,6 +9082,21 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 4693164983521286220, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
   m_PrefabInstance: {fileID: 394522422}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1924833745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924833732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 012e73e41915c8c40ae4e3392382e002, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChaseBehaviour
+  jugador: {fileID: 940091386}
+  velocidadPersecucion: 6.5
+  distanciaCaptura: 1.5
 --- !u!1001 &1938061818
 PrefabInstance:
   m_ObjectHideFlags: 0

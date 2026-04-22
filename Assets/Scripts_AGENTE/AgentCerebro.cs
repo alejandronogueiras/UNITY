@@ -50,11 +50,23 @@ public class PoliceBrain : MonoBehaviour
         if (estadoActual == Estado.Buscando) return;
 
         // Transición a Persecución
+        // Dentro de la función Detectar() de PoliceBrain
         if (vision != null && vision.CanSeePlayer)
         {
-            search.SetUltimoPuntoVisto(vision.LastSeenPosition);
-            CambiarEstado(Estado.Persiguiendo);
-            return;
+        search.SetUltimoPuntoVisto(vision.LastSeenPosition);
+        
+        // --- NUEVA COMUNICACIÓN FIPA ---
+        AgentCommunicator comms = GetComponent<AgentCommunicator>();
+        if (comms != null)
+        {
+            // Pasa la posición del jugador a JSON
+            string jsonPos = JsonUtility.ToJson(vision.LastSeenPosition);
+            // Manda un mensaje INFORM a TODOS los agentes
+            comms.SendMessage(FIPAMessage.Performative.INFORM, "ALL", jsonPos);
+        }
+
+        CambiarEstado(Estado.Persiguiendo);
+        return;
         }
 
         // Transición a Investigación
