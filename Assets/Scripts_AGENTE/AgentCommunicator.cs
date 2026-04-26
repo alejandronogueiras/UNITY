@@ -1,94 +1,176 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class AgentCommunicator : MonoBehaviour
 {
     [Header("Identidad")]
-    public string agentId; // Ej: "Policia_1", "Policia_2"
+    public string agentId;
 
-    // Memoria del agente: Almacena conversaciones completas
+    [Header("Decisión por distancia")]
+    public float distanciaMaximaRespuesta = 9999f;
+
+    [Header("CFP")]
+    public float tiempoEsperaPropuestas = 0.5f;
+
     private List<FIPAMessage> history = new List<FIPAMessage>();
-    
-    // Referencia al cerebro para pasarle la información procesada
     private PoliceBrain brain;
+
+    // Estado CFP cuando soy el iniciador
+    private bool esperandoPropuestas = false;
+    private float timerPropuestas = 0f;
+    private string convIdCFP = "";
+    private Vector3 posicionCFP;
 
     void Start()
     {
         brain = GetComponent<PoliceBrain>();
-        
-        // Si no le pones nombre, usa el nombre del GameObject
         if (string.IsNullOrEmpty(agentId)) agentId = gameObject.name;
-
-        // Darse de alta en la red al nacer
         MessageRouter.RegisterAgent(this);
     }
 
     void OnDestroy()
     {
-        // Darse de baja al morir/destruirse
         MessageRouter.UnregisterAgent(this);
     }
 
-    /// <summary>
-    /// Construye y envía un mensaje FIPA
-    /// </summary>
+    void Update()
+    {
+        if (esperandoPropuestas)
+        {
+            timerPropuestas += Time.deltaTime;
+            if (timerPropuestas >= tiempoEsperaPropuestas)
+            {
+                esperandoPropuestas = false;
+                AsignarRoles();
+            }
+        }
+    }
+
     public void SendMessage(FIPAMessage.Performative perf, string receiver, string content, string convId = "")
     {
         FIPAMessage msg = new FIPAMessage
         {
             performative = perf,
-            senderId = this.agentId,
+            senderId = agentId,
             receiverId = receiver,
             content = content,
-            // Si no hay ID de conversación, creamos uno nuevo
             conversationId = string.IsNullOrEmpty(convId) ? System.Guid.NewGuid().ToString() : convId,
             timestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds()
         };
 
-        history.Add(msg); // Guardo lo que yo mismo he dicho
-        MessageRouter.RouteMessage(msg); // Lo mando a la red
+        history.Add(msg);
+        MessageRouter.RouteMessage(msg);
     }
 
-    /// <summary>
-    /// Recibe un mensaje de la red
-    /// </summary>
     public void ReceiveMessage(FIPAMessage msg)
     {
-        history.Add(msg); // Guardar en el historial
+        history.Add(msg);
         ProcesarMensaje(msg);
     }
 
-    /// <summary>
-    /// Analiza el mensaje e interactúa con el Cerebro
-    /// </summary>
+    public void IniciarCFP(Vector3 posJugador)
+    {
+        convIdCFP = System.Guid.NewGuid().ToString();
+        posicionCFP = posJugador;
+        esperandoPropuestas = true;
+        timerPropuestas = 0f;
+
+        string jsonPos = JsonUtility.ToJson(posJugador);
+        SendMessage(FIPAMessage.Performative.CFP, "ALL", jsonPos, convIdCFP);
+        Debug.Log($"[{agentId}] CFP enviado — esperando propuestas");
+    }
+
     private void ProcesarMensaje(FIPAMessage msg)
     {
-        Debug.Log($"[{agentId}] Recibe {msg.performative} de {msg.senderId}: {msg.content}");
-
-        // EJEMPLO DE LÓGICA (Aquí es donde debes conectar con la arquitectura BDI/Híbrida de tu Cerebro)
         switch (msg.performative)
         {
-            case FIPAMessage.Performative.INFORM:
-                // Si alguien informa de una posición, intentar parsearla
+            case FIPAMessage.Performative.CFP:
                 Vector3 pos;
                 if (TryParseVector3(msg.content, out pos))
                 {
-                    // Si estoy patrullando, voy a ayudar
-                    if (brain.estadoActual == PoliceBrain.Estado.Patrullando)
+                    float distancia = Vector3.Distance(transform.position, pos);
+                    bool disponible = brain.estadoActual == PoliceBrain.Estado.Patrullando;
+                    bool cercano = distancia <= distanciaMaximaRespuesta;
+
+                    if (disponible && cercano)
                     {
-                        brain.investigate.IniciarInvestigacion(pos, true);
-                        brain.CambiarEstado(PoliceBrain.Estado.Investigando);
+                        SendMessage(FIPAMessage.Performative.PROPOSE, msg.senderId,
+                                    distancia.ToString("F2", System.Globalization.CultureInfo.InvariantCulture), msg.conversationId);
+                        Debug.Log($"[{agentId}] PROPOSE enviado a {msg.senderId} — distancia: {distancia:F1}u");
+                    }
+                    else
+                    {
+                        Debug.Log($"[{agentId}] CFP ignorado — {(!disponible ? "ocupado" : "demasiado lejos")}");
                     }
                 }
                 break;
 
-            case FIPAMessage.Performative.CFP:
-                // Responder a llamadas de formación de equipos
+            case FIPAMessage.Performative.PROPOSE:
+                if (esperandoPropuestas && msg.conversationId == convIdCFP)
+                    Debug.Log($"[{agentId}] PROPOSE recibido de {msg.senderId} — distancia: {msg.content}u");
+                break;
+
+            case FIPAMessage.Performative.ACCEPT_PROPOSAL:
+                Debug.Log($"[{agentId}] Rol aceptado: {msg.content.Split(':')[0]}");
+                EjecutarRol(msg.content);
+                break;
+
+            case FIPAMessage.Performative.REJECT_PROPOSAL:
+                Debug.Log($"[{agentId}] Propuesta rechazada, sigo patrullando");
                 break;
         }
     }
 
-    // Helper para transformar el contenido del mensaje en un Vector3
+    private void AsignarRoles()
+    {
+        List<FIPAMessage> propuestas = history
+            .Where(m => m.conversationId == convIdCFP &&
+                        m.performative == FIPAMessage.Performative.PROPOSE)
+            .OrderBy(m => float.Parse(m.content, System.Globalization.CultureInfo.InvariantCulture))
+            .ToList();
+
+        Debug.Log($"[{agentId}] Asignando roles — {propuestas.Count} propuesta(s) recibida(s)");
+
+        string[] roles = { "Investigar", "VigilarSalida", "VigilarLlave" };
+        string jsonPos = JsonUtility.ToJson(posicionCFP);
+
+        for (int i = 0; i < propuestas.Count; i++)
+        {
+            string rol = i < roles.Length ? roles[i] : "Investigar";
+            Debug.Log($"[{agentId}] Asigna rol '{rol}' a {propuestas[i].senderId}");
+            SendMessage(FIPAMessage.Performative.ACCEPT_PROPOSAL,
+                        propuestas[i].senderId, rol + ":" + jsonPos, convIdCFP);
+        }
+    }
+
+    private void EjecutarRol(string contenido)
+    {
+        int sep = contenido.IndexOf(':');
+        string rol = contenido.Substring(0, sep);
+        string jsonPos = contenido.Substring(sep + 1);
+
+        Vector3 pos;
+        TryParseVector3(jsonPos, out pos);
+
+        Debug.Log($"[{agentId}] Ejecutando rol '{rol}'");
+        switch (rol)
+        {
+            case "Investigar":
+                brain.investigate.IniciarInvestigacion(pos, true);
+                brain.CambiarEstado(PoliceBrain.Estado.Investigando);
+                break;
+
+            case "VigilarSalida":
+                brain.CambiarEstado(PoliceBrain.Estado.VigilandoSalida);
+                break;
+
+            case "VigilarLlave":
+                brain.CambiarEstado(PoliceBrain.Estado.ComprobandoLlave);
+                break;
+        }
+    }
+
     private bool TryParseVector3(string data, out Vector3 result)
     {
         try

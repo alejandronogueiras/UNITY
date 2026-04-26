@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 public class VisionSensor : MonoBehaviour
@@ -8,19 +10,38 @@ public class VisionSensor : MonoBehaviour
     [Header("Parámetros")]
     public float viewRadius = 12f;
     [Range(0, 360)] public float viewAngle = 90f;
+    public float intervaloComprobacion = 0.1f;
 
     [Header("Capas (paredes/obstáculos)")]
     public LayerMask obstacleMask;
 
-    // Outputs
     public bool CanSeePlayer { get; private set; }
-    public bool PlayerInCone { get; private set; }      
+    public bool PlayerInCone { get; private set; }
     public Vector3 LastSeenPosition { get; private set; }
     public float DistanceToPlayer { get; private set; }
 
-    void Update()
+    public event Action<Vector3> OnPlayerSpotted;
+    public event Action OnPlayerLost;
+
+    void Start()
     {
-        UpdateVision();
+        StartCoroutine(RutinaVision());
+    }
+
+    private IEnumerator RutinaVision()
+    {
+        while (true)
+        {
+            bool antesPodia = CanSeePlayer;
+            UpdateVision();
+
+            if (CanSeePlayer && !antesPodia)
+                OnPlayerSpotted?.Invoke(LastSeenPosition);
+            else if (!CanSeePlayer && antesPodia)
+                OnPlayerLost?.Invoke();
+
+            yield return new WaitForSeconds(intervaloComprobacion);
+        }
     }
 
     void UpdateVision()
@@ -47,11 +68,9 @@ public class VisionSensor : MonoBehaviour
         Vector3 dir = (target - origin).normalized;
 
         RaycastHit hit;
-
         if (Physics.Raycast(origin, dir, out hit, viewRadius, ~0, QueryTriggerInteraction.Ignore))
         {
-            if (hit.transform != jugador)
-                return;
+            if (hit.transform != jugador) return;
         }
 
         CanSeePlayer = true;

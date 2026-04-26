@@ -26,59 +26,75 @@ public class PoliceBrain : MonoBehaviour
     [Header("Animación")]
     public Animator animator;
     public float animSmooth = 8f;
-    
-    // Propiedad pública para que los comportamientos accedan al NavMeshAgent
+
     public NavMeshAgent Agent { get; private set; }
 
     void Start()
     {
         Agent = GetComponent<NavMeshAgent>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
+
+        if (vision != null)
+        {
+            vision.OnPlayerSpotted += OnJugadorVisto;
+            vision.OnPlayerLost    += OnJugadorPerdido;
+        }
+
+        if (hearing != null)
+            hearing.OnNoiseDetected += OnRuidoDetectado;
     }
+
+    void OnDestroy()
+    {
+        if (vision != null)
+        {
+            vision.OnPlayerSpotted -= OnJugadorVisto;
+            vision.OnPlayerLost    -= OnJugadorPerdido;
+        }
+
+        if (hearing != null)
+            hearing.OnNoiseDetected -= OnRuidoDetectado;
+    }
+
+    // ── Callbacks de sensores ────────────────────────────────────────────────
+
+    private void OnJugadorVisto(Vector3 pos)
+    {
+        if (search != null) search.SetUltimoPuntoVisto(pos);
+
+        if (estadoActual != Estado.Persiguiendo)
+        {
+            AgentCommunicator comms = GetComponent<AgentCommunicator>();
+            if (comms != null) comms.IniciarCFP(pos);
+        }
+
+        CambiarEstado(Estado.Persiguiendo);
+    }
+
+    private void OnJugadorPerdido()
+    {
+        if (estadoActual == Estado.Persiguiendo)
+            CambiarEstado(Estado.Buscando);
+    }
+
+    private void OnRuidoDetectado(Vector3 punto, bool cerca)
+    {
+        if (estadoActual == Estado.Persiguiendo ||
+            estadoActual == Estado.Investigando ||
+            estadoActual == Estado.Buscando) return;
+
+        estadoAnterior = estadoActual;
+        if (investigate != null) investigate.IniciarInvestigacion(punto, !cerca);
+        CambiarEstado(Estado.Investigando);
+    }
+
+    // ── Bucle principal ──────────────────────────────────────────────────────
 
     void Update()
     {
         if (Agent == null) return;
-
-        Detectar();
         GestionarEstados();
         ActualizarAnimacion();
-    }
-
-    void Detectar()
-    {
-        if (estadoActual == Estado.Buscando) return;
-
-        // Transición a Persecución
-        // Dentro de la función Detectar() de PoliceBrain
-        if (vision != null && vision.CanSeePlayer)
-        {
-        search.SetUltimoPuntoVisto(vision.LastSeenPosition);
-        
-        // --- NUEVA COMUNICACIÓN FIPA ---
-        AgentCommunicator comms = GetComponent<AgentCommunicator>();
-        if (comms != null)
-        {
-            // Pasa la posición del jugador a JSON
-            string jsonPos = JsonUtility.ToJson(vision.LastSeenPosition);
-            // Manda un mensaje INFORM a TODOS los agentes
-            comms.SendMessage(FIPAMessage.Performative.INFORM, "ALL", jsonPos);
-        }
-
-        CambiarEstado(Estado.Persiguiendo);
-        return;
-        }
-
-        // Transición a Investigación
-        if (hearing != null && (hearing.EscuchaCerca || hearing.EscuchaLejos))
-        {
-            if (estadoActual != Estado.Persiguiendo && estadoActual != Estado.Investigando)
-            {
-                estadoAnterior = estadoActual;
-                investigate.IniciarInvestigacion(hearing.PuntoOido, hearing.EscuchaLejos);
-                CambiarEstado(Estado.Investigando);
-            }
-        }
     }
 
     void GestionarEstados()
@@ -108,6 +124,7 @@ public class PoliceBrain : MonoBehaviour
 
     public void CambiarEstado(Estado nuevoEstado)
     {
+        if (nuevoEstado == estadoActual) return;
         estadoActual = nuevoEstado;
         if (Agent != null) Agent.ResetPath();
     }
@@ -116,7 +133,6 @@ public class PoliceBrain : MonoBehaviour
     {
         if (animator == null || Agent == null) return;
 
-        // Usamos la velocidad máxima configurada en el chase behaviour para normalizar
         float maxVel = chase != null ? chase.velocidadPersecucion : 6.5f;
         float speed01 = Agent.velocity.magnitude / Mathf.Max(0.01f, maxVel);
         float smooth = Mathf.Lerp(animator.GetFloat("Speed"), speed01, Time.deltaTime * animSmooth);
@@ -127,8 +143,7 @@ public class PoliceBrain : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // GameManager.instance.Perder(); // Descomenta si tienes tu GameManager
-            Debug.Log("¡Jugador Atrapado!");
+            // GameManager.instance.Perder();
         }
     }
 }

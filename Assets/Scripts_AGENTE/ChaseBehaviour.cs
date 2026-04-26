@@ -34,10 +34,5 @@ public class ChaseBehaviour : MonoBehaviour
             }
         }
 
-        // Si pierde de vista al jugador, pasa al estado Buscando
-        if (!brain.vision.CanSeePlayer)
-        {
-            brain.CambiarEstado(PoliceBrain.Estado.Buscando);
-        }
     }
 }
