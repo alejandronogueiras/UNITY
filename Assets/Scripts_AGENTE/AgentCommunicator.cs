@@ -22,6 +22,8 @@ public class AgentCommunicator : MonoBehaviour
     private string convIdCFP = "";
     private Vector3 posicionCFP;
 
+    // ── Ciclo de vida ────────────────────────────────────────────────────────
+
     void Start()
     {
         brain = GetComponent<PoliceBrain>();
@@ -47,16 +49,25 @@ public class AgentCommunicator : MonoBehaviour
         }
     }
 
+    // ── API pública ──────────────────────────────────────────────────────────
+
+    // Expone el historial de forma segura (solo lectura) para que
+    // PoliceBrain.ActualizarCreencias() pueda leer los CFPs recientes
+    public IReadOnlyList<FIPAMessage> GetHistory()
+    {
+        return history.AsReadOnly();
+    }
+
     public void SendMessage(FIPAMessage.Performative perf, string receiver, string content, string convId = "")
     {
         FIPAMessage msg = new FIPAMessage
         {
-            performative = perf,
-            senderId = agentId,
-            receiverId = receiver,
-            content = content,
-            conversationId = string.IsNullOrEmpty(convId) ? System.Guid.NewGuid().ToString() : convId,
-            timestamp = System.DateTimeOffset.Now.ToUnixTimeMilliseconds()
+            performative    = perf,
+            senderId        = agentId,
+            receiverId      = receiver,
+            content         = content,
+            conversationId  = string.IsNullOrEmpty(convId) ? System.Guid.NewGuid().ToString() : convId,
+            timestamp       = System.DateTimeOffset.Now.ToUnixTimeMilliseconds()
         };
 
         history.Add(msg);
@@ -71,8 +82,8 @@ public class AgentCommunicator : MonoBehaviour
 
     public void IniciarCFP(Vector3 posJugador)
     {
-        convIdCFP = System.Guid.NewGuid().ToString();
-        posicionCFP = posJugador;
+        convIdCFP       = System.Guid.NewGuid().ToString();
+        posicionCFP     = posJugador;
         esperandoPropuestas = true;
         timerPropuestas = 0f;
 
@@ -80,6 +91,8 @@ public class AgentCommunicator : MonoBehaviour
         SendMessage(FIPAMessage.Performative.CFP, "ALL", jsonPos, convIdCFP);
         Debug.Log($"[{agentId}] CFP enviado — esperando propuestas");
     }
+
+    // ── Procesado de mensajes ────────────────────────────────────────────────
 
     private void ProcesarMensaje(FIPAMessage msg)
     {
@@ -89,14 +102,15 @@ public class AgentCommunicator : MonoBehaviour
                 Vector3 pos;
                 if (TryParseVector3(msg.content, out pos))
                 {
-                    float distancia = Vector3.Distance(transform.position, pos);
-                    bool disponible = brain.estadoActual == PoliceBrain.Estado.Patrullando;
-                    bool cercano = distancia <= distanciaMaximaRespuesta;
+                    float distancia  = Vector3.Distance(transform.position, pos);
+                    bool disponible  = brain.intencionActual == PoliceBrain.Deseo.Patrullar;
+                    bool cercano     = distancia <= distanciaMaximaRespuesta;
 
                     if (disponible && cercano)
                     {
                         SendMessage(FIPAMessage.Performative.PROPOSE, msg.senderId,
-                                    distancia.ToString("F2", System.Globalization.CultureInfo.InvariantCulture), msg.conversationId);
+                                    distancia.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                                    msg.conversationId);
                         Debug.Log($"[{agentId}] PROPOSE enviado a {msg.senderId} — distancia: {distancia:F1}u");
                     }
                     else
@@ -122,11 +136,13 @@ public class AgentCommunicator : MonoBehaviour
         }
     }
 
+    // ── Asignación de roles ──────────────────────────────────────────────────
+
     private void AsignarRoles()
     {
         List<FIPAMessage> propuestas = history
             .Where(m => m.conversationId == convIdCFP &&
-                        m.performative == FIPAMessage.Performative.PROPOSE)
+                        m.performative   == FIPAMessage.Performative.PROPOSE)
             .OrderBy(m => float.Parse(m.content, System.Globalization.CultureInfo.InvariantCulture))
             .ToList();
 
@@ -144,32 +160,28 @@ public class AgentCommunicator : MonoBehaviour
         }
     }
 
+    // Actualiza las Creencias del cerebro BDI en lugar de cambiar el estado directamente.
+    // El ciclo BDI de PoliceBrain.Update() se encargará de ejecutar el comportamiento adecuado.
     private void EjecutarRol(string contenido)
     {
-        int sep = contenido.IndexOf(':');
-        string rol = contenido.Substring(0, sep);
+        int sep      = contenido.IndexOf(':');
+        string rol   = contenido.Substring(0, sep);
         string jsonPos = contenido.Substring(sep + 1);
 
         Vector3 pos;
         TryParseVector3(jsonPos, out pos);
 
         Debug.Log($"[{agentId}] Ejecutando rol '{rol}'");
-        switch (rol)
-        {
-            case "Investigar":
-                brain.investigate.IniciarInvestigacion(pos, true);
-                brain.CambiarEstado(PoliceBrain.Estado.Investigando);
-                break;
 
-            case "VigilarSalida":
-                brain.CambiarEstado(PoliceBrain.Estado.VigilandoSalida);
-                break;
+        // Delegar en el cerebro BDI: solo actualizamos la creencia
+        brain.AsignarRol(rol);
 
-            case "VigilarLlave":
-                brain.CambiarEstado(PoliceBrain.Estado.ComprobandoLlave);
-                break;
-        }
+        // Si el rol implica buscar en una posición concreta, la registramos en el actuador
+        if (rol == "Investigar" && brain.search != null)
+            brain.search.SetUltimoPuntoVisto(pos);
     }
+
+    // ── Utilidades ───────────────────────────────────────────────────────────
 
     private bool TryParseVector3(string data, out Vector3 result)
     {

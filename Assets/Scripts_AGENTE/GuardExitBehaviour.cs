@@ -29,7 +29,9 @@ public class GuardExitBehaviour : MonoBehaviour
                 }
 
                 salidaAsegurada = true;
-                brain.CambiarEstado(PoliceBrain.Estado.Patrullando);
+                
+                // Limpiamos el rol para que pase a Patrullar la salida de forma natural
+                brain.AsignarRol("");
             }
         }
     }

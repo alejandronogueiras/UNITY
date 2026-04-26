@@ -7,7 +7,6 @@ public class CheckKeyBehaviour : MonoBehaviour
     public float velocidadNormal = 3.5f;
 
     [HideInInspector] public bool protegiendoLlave = false;
-    [HideInInspector] public bool llaveRobada = false;
 
     public void Ejecutar(PoliceBrain brain)
     {
@@ -19,29 +18,22 @@ public class CheckKeyBehaviour : MonoBehaviour
 
         if (!brain.Agent.pathPending && brain.Agent.remainingDistance < 0.6f)
         {
-            GameObject llave = GameObject.FindWithTag("Llave");
+            protegiendoLlave = true;
 
-            if (llave == null)
+            // Configuramos la zona de patrulla para que vigile esta área
+            if (brain.patrol != null && zonaLlaveCentro != null)
             {
-                protegiendoLlave = false;
-                llaveRobada = true;
-                brain.CambiarEstado(PoliceBrain.Estado.VigilandoSalida);
-            }
-            else
-            {
-                protegiendoLlave = true;
-
-                if (brain.patrol != null && zonaLlaveCentro != null)
+                brain.patrol.zonas.Clear();
+                brain.patrol.zonas.Add(new PatrolBehaviour.PatrolZone
                 {
-                    brain.patrol.zonas.Clear();
-                    brain.patrol.zonas.Add(new PatrolBehaviour.PatrolZone
-                    {
-                        centro = zonaLlaveCentro,
-                        radio = zonaLlaveRadio
-                    });
-                }
-                brain.CambiarEstado(PoliceBrain.Estado.Patrullando);
+                    centro = zonaLlaveCentro,
+                    radio = zonaLlaveRadio
+                });
             }
+            
+            // Le decimos al cerebro que hemos cumplido el rol inicial. 
+            // Esto hará que el BDI evalúe y pase al deseo "Patrullar".
+            brain.AsignarRol("");
         }
     }
 }

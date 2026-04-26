@@ -210,6 +210,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 19663830}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 19663835}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 19663834}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 19663833}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 19663832}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!1 &19663820 stripped
 GameObject:
@@ -278,8 +290,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  estadoActual: 0
-  estadoAnterior: 0
+  creencias:
+    jugadorDetectado: 0
+    ultimaPosicionJugador: {x: 0, y: 0, z: 0}
+    escuchandoRuido: 0
+    origenRuido: {x: 0, y: 0, z: 0}
+    ruidoCerca: 0
+    llaveRobada: 0
+    rolAsignado: 
+    nivelAlertaGlobal: 0
+  intencionActual: 0
   vision: {fileID: 19663825}
   hearing: {fileID: 19663826}
   patrol: {fileID: 19663822}
@@ -305,6 +325,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   viewRadius: 12
   viewAngle: 90
+  intervaloComprobacion: 0.1
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
@@ -323,6 +344,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   rangoCerca: 10
   rangoLejos: 15
+  intervaloComprobacion: 0.1
 --- !u!114 &19663830
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -338,6 +360,64 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   velocidadPersecucion: 6.5
   distanciaCaptura: 1.5
+--- !u!114 &19663832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19663820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a526cc6e9ce34654cbb9ccf18bb96696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SearchBehaviour
+  velocidadNormal: 3.5
+--- !u!114 &19663833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19663820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8501ccc9d768f7047b63f496d4391e0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InvestigateBehaviour
+  velocidadNormal: 3.5
+  tiempoInvestigacion: 4
+  radioInvestigacion: 5
+--- !u!114 &19663834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19663820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92eff7254a73b4441aea0f08bccf4183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuardExitBehaviour
+  salida: {fileID: 1861350397}
+  velocidadNormal: 3.5
+--- !u!114 &19663835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19663820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a11b2ed26aa2203429e73f874bf51cf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CheckKeyBehaviour
+  zonaLlaveCentro: {fileID: 26787739}
+  zonaLlaveRadio: 8
+  velocidadNormal: 3.5
+  protegiendoLlave: 0
 --- !u!1 &26453003
 GameObject:
   m_ObjectHideFlags: 0
@@ -2238,6 +2318,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1924833745}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1924833750}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1924833749}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1924833748}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1924833747}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!4 &398160271 stripped
 Transform:
@@ -4906,6 +4998,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1064020790}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1064020795}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1064020794}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1064020793}
+    - targetCorrespondingSourceObject: {fileID: 2056602243043104908, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1064020792}
   m_SourcePrefab: {fileID: 100100000, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
 --- !u!1 &1064020780 stripped
 GameObject:
@@ -4974,8 +5078,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  estadoActual: 0
-  estadoAnterior: 0
+  creencias:
+    jugadorDetectado: 0
+    ultimaPosicionJugador: {x: 0, y: 0, z: 0}
+    escuchandoRuido: 0
+    origenRuido: {x: 0, y: 0, z: 0}
+    ruidoCerca: 0
+    llaveRobada: 0
+    rolAsignado: 
+    nivelAlertaGlobal: 0
+  intencionActual: 0
   vision: {fileID: 1064020785}
   hearing: {fileID: 1064020786}
   patrol: {fileID: 1064020782}
@@ -5001,6 +5113,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   viewRadius: 12
   viewAngle: 112
+  intervaloComprobacion: 0.1
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
@@ -5019,6 +5132,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   rangoCerca: 3
   rangoLejos: 7
+  intervaloComprobacion: 0.1
 --- !u!114 &1064020790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5034,6 +5148,64 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   velocidadPersecucion: 6.5
   distanciaCaptura: 1.5
+--- !u!114 &1064020792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064020780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92eff7254a73b4441aea0f08bccf4183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuardExitBehaviour
+  salida: {fileID: 1861350397}
+  velocidadNormal: 3.5
+--- !u!114 &1064020793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064020780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a11b2ed26aa2203429e73f874bf51cf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CheckKeyBehaviour
+  zonaLlaveCentro: {fileID: 26787739}
+  zonaLlaveRadio: 8
+  velocidadNormal: 3.5
+  protegiendoLlave: 0
+--- !u!114 &1064020794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064020780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8501ccc9d768f7047b63f496d4391e0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InvestigateBehaviour
+  velocidadNormal: 3.5
+  tiempoInvestigacion: 4
+  radioInvestigacion: 5
+--- !u!114 &1064020795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064020780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a526cc6e9ce34654cbb9ccf18bb96696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SearchBehaviour
+  velocidadNormal: 3.5
 --- !u!4 &1064082310 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4740601507822456562, guid: fe446090689991a4c815393f1efc07d0, type: 3}
@@ -7824,8 +7996,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  estadoActual: 0
-  estadoAnterior: 0
+  creencias:
+    jugadorDetectado: 0
+    ultimaPosicionJugador: {x: 0, y: 0, z: 0}
+    escuchandoRuido: 0
+    origenRuido: {x: 0, y: 0, z: 0}
+    ruidoCerca: 0
+    llaveRobada: 0
+    rolAsignado: 
+    nivelAlertaGlobal: 0
+  intencionActual: 0
   vision: {fileID: 1598265356}
   hearing: {fileID: 1598265357}
   patrol: {fileID: 1598265362}
@@ -7851,6 +8031,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   viewRadius: 12
   viewAngle: 90
+  intervaloComprobacion: 0.1
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
@@ -7869,6 +8050,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   rangoCerca: 10
   rangoLejos: 20
+  intervaloComprobacion: 0.1
 --- !u!95 &1598265360 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 4693164983521286220, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
@@ -7929,7 +8111,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92eff7254a73b4441aea0f08bccf4183, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuardExitBehaviour
-  salida: {fileID: 0}
+  salida: {fileID: 1861350397}
   velocidadNormal: 3.5
 --- !u!114 &1598265364
 MonoBehaviour:
@@ -7943,11 +8125,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a11b2ed26aa2203429e73f874bf51cf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckKeyBehaviour
-  zonaLlaveCentro: {fileID: 0}
+  zonaLlaveCentro: {fileID: 26787739}
   zonaLlaveRadio: 8
   velocidadNormal: 3.5
   protegiendoLlave: 0
-  llaveRobada: 0
 --- !u!114 &1598265365
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9032,8 +9213,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29cd1896c233fe419432396c9255440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoliceBrain
-  estadoActual: 0
-  estadoAnterior: 0
+  creencias:
+    jugadorDetectado: 0
+    ultimaPosicionJugador: {x: 0, y: 0, z: 0}
+    escuchandoRuido: 0
+    origenRuido: {x: 0, y: 0, z: 0}
+    ruidoCerca: 0
+    llaveRobada: 0
+    rolAsignado: 
+    nivelAlertaGlobal: 0
+  intencionActual: 0
   vision: {fileID: 1924833737}
   hearing: {fileID: 1924833738}
   patrol: {fileID: 1924833734}
@@ -9059,6 +9248,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   viewRadius: 12
   viewAngle: 90
+  intervaloComprobacion: 0.1
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
@@ -9077,6 +9267,7 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   rangoCerca: 10
   rangoLejos: 15
+  intervaloComprobacion: 0.1
 --- !u!95 &1924833741 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 4693164983521286220, guid: ad34daa341d914448a90e87aeb6da3ff, type: 3}
@@ -9097,6 +9288,64 @@ MonoBehaviour:
   jugador: {fileID: 940091386}
   velocidadPersecucion: 6.5
   distanciaCaptura: 1.5
+--- !u!114 &1924833747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924833732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a526cc6e9ce34654cbb9ccf18bb96696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SearchBehaviour
+  velocidadNormal: 3.5
+--- !u!114 &1924833748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924833732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8501ccc9d768f7047b63f496d4391e0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InvestigateBehaviour
+  velocidadNormal: 3.5
+  tiempoInvestigacion: 4
+  radioInvestigacion: 5
+--- !u!114 &1924833749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924833732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92eff7254a73b4441aea0f08bccf4183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuardExitBehaviour
+  salida: {fileID: 1861350397}
+  velocidadNormal: 3.5
+--- !u!114 &1924833750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924833732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a11b2ed26aa2203429e73f874bf51cf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CheckKeyBehaviour
+  zonaLlaveCentro: {fileID: 26787739}
+  zonaLlaveRadio: 8
+  velocidadNormal: 3.5
+  protegiendoLlave: 0
 --- !u!1001 &1938061818
 PrefabInstance:
   m_ObjectHideFlags: 0

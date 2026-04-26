@@ -23,18 +23,14 @@ public class InvestigateBehaviour : MonoBehaviour
         brain.Agent.speed = velocidadNormal;
         brain.Agent.isStopped = false;
 
-        if (!investigandoZona && brain.hearing.EscuchaCerca)
+        if (!investigandoZona)
         {
-            brain.Agent.SetDestination(brain.hearing.PuntoOido);
-            if (!brain.Agent.pathPending && brain.Agent.remainingDistance < 0.6f)
-            {
-                FinalizarInvestigacion(brain);
-            }
+            brain.Agent.SetDestination(centroInvestigacion);
         }
-        else if (investigandoZona)
+        else
         {
             timerInvestigacion += Time.deltaTime;
-            if (!brain.Agent.hasPath)
+            if (!brain.Agent.hasPath || brain.Agent.remainingDistance < 0.5f)
             {
                 Vector3 punto = centroInvestigacion + Random.insideUnitSphere * radioInvestigacion;
                 punto.y = transform.position.y;
@@ -44,21 +40,6 @@ public class InvestigateBehaviour : MonoBehaviour
                     brain.Agent.SetDestination(hit.position);
                 }
             }
-
-            if (timerInvestigacion >= tiempoInvestigacion)
-            {
-                investigandoZona = false;
-                FinalizarInvestigacion(brain);
-            }
         }
-    }
-
-    private void FinalizarInvestigacion(PoliceBrain brain)
-    {
-        PoliceBrain.Estado siguiente = (brain.estadoAnterior == PoliceBrain.Estado.Investigando) 
-            ? PoliceBrain.Estado.Patrullando 
-            : brain.estadoAnterior;
-            
-        brain.CambiarEstado(siguiente);
     }
 }

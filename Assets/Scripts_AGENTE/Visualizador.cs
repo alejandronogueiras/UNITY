@@ -50,7 +50,8 @@ public class SensorVisualizer : MonoBehaviour
     {
         Color cVision = colorTranquilo;
 
-        if (brain != null && brain.estadoActual == PoliceBrain.Estado.Persiguiendo)
+        // ADAPTADO AL BDI: Leemos el "Deseo" de perseguir en lugar del estado
+        if (brain != null && brain.intencionActual == PoliceBrain.Deseo.PerseguirLadron)
             cVision = colorAlerta;
         else if (vision != null && (vision.PlayerInCone || vision.CanSeePlayer))
             cVision = colorSospecha;
