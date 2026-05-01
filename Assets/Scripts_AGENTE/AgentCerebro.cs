@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
-
+[RequireComponent(typeof(AgentCommunicator))]
 public class PoliceBrain : MonoBehaviour
 {
     // ── Arquitectura BDI ─────────────────────────────────────────────────────
@@ -102,8 +102,19 @@ public class PoliceBrain : MonoBehaviour
         if (search != null)
             search.SetUltimoPuntoVisto(pos);
 
-        if (intencionActual != Deseo.PerseguirLadron && communicator != null)
+        // Chivato 1: Si no hay comunicador, la consola nos gritará un error rojo.
+        if (communicator == null)
+        {
+            Debug.LogError($"[{gameObject.name}] ¡ERROR! Falta el AgentCommunicator. La IA no puede enviar mensajes FIPA.");
+            return;
+        }
+
+        // Chivato 2: Nos avisa justo antes de llamar a la función IniciarCFP
+        if (intencionActual != Deseo.PerseguirLadron)
+        {
+            Debug.Log($"[{gameObject.name}] Te he visto. Enviando petición de ayuda (CFP)...");
             communicator.IniciarCFP(pos);
+        }
     }
 
     private void OnJugadorPerdido()
@@ -150,6 +161,10 @@ public class PoliceBrain : MonoBehaviour
             creencias.nivelAlertaGlobal = communicator.GetHistory()
                 .Where(m => m.performative == FIPAMessage.Performative.CFP && m.timestamp > hace30Seg)
                 .Count();
+        }
+        if (creencias.nivelAlertaGlobal > 0) 
+        {
+            Debug.Log($"[{gameObject.name}] Mi nivel de alerta es: {creencias.nivelAlertaGlobal}");
         }
     }
 
@@ -204,6 +219,7 @@ public class PoliceBrain : MonoBehaviour
                     // El planificador no encontró solución: marcamos como fallido
                     // para no volver a intentarlo cada frame con el mismo estado
                     planFallido = true;
+                    //POSIBLE FALLO
                     Debug.LogWarning($"[{gameObject.name}] GOAP no encontró plan. Esperando cambio de estado.");
                     return;
                 }
@@ -336,20 +352,25 @@ public class PoliceBrain : MonoBehaviour
     }
 
     void EjecutarComportamientoPorRol()
-    {
-        switch (creencias.rolAsignado)
         {
-            case "Investigar":
-                if (search != null)    search.Ejecutar(this);
-                break;
-            case "VigilarSalida":
-                if (guardExit != null) guardExit.Ejecutar(this);
-                break;
-            case "VigilarLlave":
-                if (checkKey != null)  checkKey.Ejecutar(this);
-                break;
+            switch (creencias.rolAsignado)
+            {
+                case "Investigar":
+                    if (search != null)
+                    {
+                        bool terminado = search.Ejecutar(this);
+                        // Si ya ha investigado la zona por el aviso FIPA, borramos el rol
+                        if (terminado) AsignarRol(""); 
+                    }
+                    break;
+                case "VigilarSalida":
+                    if (guardExit != null) guardExit.Ejecutar(this);
+                    break;
+                case "VigilarLlave":
+                    if (checkKey != null) checkKey.Ejecutar(this);
+                    break;
+            }
         }
-    }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 

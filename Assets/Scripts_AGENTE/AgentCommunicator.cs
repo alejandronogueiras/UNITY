@@ -49,7 +49,6 @@ public class AgentCommunicator : MonoBehaviour
         }
     }
 
-    // ── API pública ──────────────────────────────────────────────────────────
 
     // Expone el historial de forma segura (solo lectura) para que
     // PoliceBrain.ActualizarCreencias() pueda leer los CFPs recientes
