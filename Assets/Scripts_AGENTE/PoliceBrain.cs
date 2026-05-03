@@ -41,6 +41,12 @@ public class PoliceBrain : MonoBehaviour
     // Evita llamar al planificador cada frame si ya falló para el estado actual
     private bool planFallido = false;
 
+    // Evita reiniciar la investigación cada frame
+    private bool investigacionRuidoIniciada = false;
+
+    // Evita spamear consola cada frame
+    private int ultimoNivelAlertaImpreso = -1;
+
     // ─────────────────────────────────────────────────────────────────────────
 
     [Header("Sensores y Comunicación")]
@@ -55,6 +61,7 @@ public class PoliceBrain : MonoBehaviour
     public SearchBehaviour search;
     public CheckKeyBehaviour checkKey;
     public GuardExitBehaviour guardExit;
+    public GuardButtonsBehaviour guardButtons;
 
     [Header("Animación")]
     public Animator animator;
@@ -136,6 +143,28 @@ public class PoliceBrain : MonoBehaviour
         creencias.ruidoCerca      = cerca;
     }
 
+    private void RegistrarJugadorVisto(Vector3 pos, bool enviarCFP)
+    {
+        bool antesNoLoVeia = !creencias.jugadorDetectado;
+
+        creencias.jugadorDetectado = true;
+        creencias.ultimaPosicionJugador = pos;
+
+        if (search != null)
+            search.SetUltimoPuntoVisto(pos);
+
+        if (communicator == null)
+        {
+            Debug.LogError($"[{gameObject.name}] ERROR: Falta AgentCommunicator. No se pueden enviar mensajes FIPA.");
+            return;
+        }
+        if (enviarCFP && antesNoLoVeia)
+        {
+            Debug.Log($"[{gameObject.name}] Te he visto. Enviando petición de ayuda (CFP)...");
+            communicator.IniciarCFP(pos);
+        }
+    }
+
     // ── Bucle principal BDI ──────────────────────────────────────────────────
 
     void Update()
@@ -149,22 +178,50 @@ public class PoliceBrain : MonoBehaviour
     }
 
     void ActualizarCreencias()
-    {
+    {   
+        // Sincronizar visión
+        if (vision != null)
+        {
+            if (vision.CanSeePlayer)
+            {
+                RegistrarJugadorVisto(vision.LastSeenPosition, !creencias.jugadorDetectado);
+            }
+            else if (creencias.jugadorDetectado)
+            {
+                creencias.jugadorDetectado = false;
+
+                if (intencionActual == Deseo.PerseguirLadron)
+                    CambiarIntencion(Deseo.BuscarLadron);
+            }
+        }
+        // sincronizar audicion
+        if (hearing != null &&
+            !creencias.jugadorDetectado &&
+            intencionActual != Deseo.PerseguirLadron &&
+            intencionActual != Deseo.BuscarLadron &&
+            intencionActual != Deseo.InvestigarRuido)
+        {
+            if (hearing.EscuchaCerca || hearing.EscuchaLejos)
+            {
+                creencias.escuchandoRuido = true;
+                creencias.origenRuido = hearing.PuntoOido;
+                creencias.ruidoCerca = hearing.EscuchaCerca;
+            }
+        }
         // 1. ¿Sigue la llave en su sitio?
         GameObject llave = GameObject.FindWithTag("Llave");
         creencias.llaveRobada = (llave == null);
 
         // 2. Nivel de alerta global (CFPs de los últimos 30 s)
-        if (communicator != null)
+        long hace30Seg = DateTimeOffset.Now.ToUnixTimeMilliseconds() - 30000;
+        creencias.nivelAlertaGlobal = MessageRouter.GetNivelAlertaGlobal(hace30Seg);
+
+        if (creencias.nivelAlertaGlobal != ultimoNivelAlertaImpreso)
         {
-            long hace30Seg = DateTimeOffset.Now.ToUnixTimeMilliseconds() - 30000;
-            creencias.nivelAlertaGlobal = communicator.GetHistory()
-                .Where(m => m.performative == FIPAMessage.Performative.CFP && m.timestamp > hace30Seg)
-                .Count();
-        }
-        if (creencias.nivelAlertaGlobal > 0) 
-        {
-            Debug.Log($"[{gameObject.name}] Mi nivel de alerta es: {creencias.nivelAlertaGlobal}");
+            ultimoNivelAlertaImpreso = creencias.nivelAlertaGlobal;
+
+            if (creencias.nivelAlertaGlobal > 0)
+                Debug.Log($"[{gameObject.name}] Mi nivel de alerta es: {creencias.nivelAlertaGlobal}");
         }
     }
 
@@ -176,17 +233,38 @@ public class PoliceBrain : MonoBehaviour
         {
             nueva = Deseo.PerseguirLadron;
         }
+        else if (creencias.nivelAlertaGlobal >= 2 && MessageRouter.TodosHanPerdidoLadron())
+        {
+            MessageRouter.IntentarIniciarBusquedaCoordinada(creencias.nivelAlertaGlobal);
+
+            if (!string.IsNullOrEmpty(creencias.rolAsignado))
+            {
+                nueva = Deseo.CumplirRolAsignado;
+            }
+            else if (intencionActual == Deseo.BuscarLadron && !BusquedaTerminada())
+            {
+                nueva = Deseo.BuscarLadron;
+            }
+            else
+            {
+                nueva = Deseo.Patrullar;
+            }
+        }
+        else if (MessageRouter.BusquedaCoordinadaActiva && !string.IsNullOrEmpty(creencias.rolAsignado))
+        {
+            nueva = Deseo.CumplirRolAsignado;
+        }
         else if (intencionActual == Deseo.BuscarLadron && !BusquedaTerminada())
         {
             nueva = Deseo.BuscarLadron;
         }
-        else if (!string.IsNullOrEmpty(creencias.rolAsignado))
-        {
-            nueva = Deseo.CumplirRolAsignado;
-        }
         else if (creencias.escuchandoRuido)
         {
             nueva = Deseo.InvestigarRuido;
+        }
+        else if (!string.IsNullOrEmpty(creencias.rolAsignado))
+        {
+            nueva = Deseo.CumplirRolAsignado;
         }
         else
         {
@@ -207,53 +285,94 @@ public class PoliceBrain : MonoBehaviour
     void EjecutarIntencion()
     {
         // Los deseos de caza usan GOAP; el resto, ejecución directa
-        if (intencionActual == Deseo.PerseguirLadron || intencionActual == Deseo.BuscarLadron)
+        if (intencionActual == Deseo.PerseguirLadron)
         {
-            // Solo planificamos si no tenemos plan, no falló antes y no hay acción en curso
-            if (planActual == null && !planFallido && accionEnEjecucion == null)
-            {
-                GenerarPlanCaza();
+            EjecutarPersecucionGOAP();
+            return;
+        }
+        if (intencionActual == Deseo.BuscarLadron)
+        {   
+            planActual = null;
+            accionEnEjecucion = null;
+            planFallido = false;
 
-                if (planActual == null)
+            if (search != null)
+            {
+                bool terminado = search.Ejecutar(this);
+
+                if (terminado)
                 {
-                    // El planificador no encontró solución: marcamos como fallido
-                    // para no volver a intentarlo cada frame con el mismo estado
-                    planFallido = true;
-                    //POSIBLE FALLO
-                    Debug.LogWarning($"[{gameObject.name}] GOAP no encontró plan. Esperando cambio de estado.");
-                    return;
+                    creencias.jugadorDetectado = false;
+                    CambiarIntencion(Deseo.Patrullar);
                 }
             }
 
-            if (accionEnEjecucion != null)
-                EjecutarAccionGOAP(accionEnEjecucion.Nombre);
+            return;
         }
-        else
+        // Al salir del modo persecución limpiamos GOAP.
+        planActual = null;
+        accionEnEjecucion = null;
+        planFallido = false;
+
+        switch (intencionActual)
         {
-            // Al salir del modo caza limpiamos todo el estado GOAP
-            planActual        = null;
-            accionEnEjecucion = null;
-            planFallido       = false;
+            case Deseo.Patrullar:
+                if (patrol != null) patrol.Ejecutar();
+                break;
 
-            switch (intencionActual)
+            case Deseo.InvestigarRuido:
+                EjecutarInvestigacionRuido();
+                break;
+
+            case Deseo.CumplirRolAsignado:
+                EjecutarComportamientoPorRol();
+                break;
+        }
+    }
+
+    //persecución GOAP
+    private void EjecutarPersecucionGOAP()
+    {
+        if (planActual == null && !planFallido && accionEnEjecucion == null)
+        {
+            GenerarPlanCaza();
+
+            if (planActual == null)
             {
-                case Deseo.Patrullar:
-                    if (patrol != null) patrol.Ejecutar();
-                    break;
-
-                case Deseo.InvestigarRuido:
-                    if (investigate != null)
-                    {
-                        investigate.IniciarInvestigacion(creencias.origenRuido, !creencias.ruidoCerca);
-                        investigate.Ejecutar(this);
-                    }
-                    creencias.escuchandoRuido = false;
-                    break;
-
-                case Deseo.CumplirRolAsignado:
-                    EjecutarComportamientoPorRol();
-                    break;
+                planFallido = true;
+                Debug.LogWarning($"[{gameObject.name}] GOAP no encontró plan. Esperando cambio de estado.");
+                return;
             }
+        }
+
+        if (accionEnEjecucion != null)
+            EjecutarAccionGOAP(accionEnEjecucion.Nombre);
+    }
+
+    private void EjecutarInvestigacionRuido()
+    {
+        if (investigate == null)
+        {
+            creencias.escuchandoRuido = false;
+            investigacionRuidoIniciada = false;
+            return;
+        }
+
+        if (!investigacionRuidoIniciada)
+        {
+            investigate.IniciarInvestigacion(creencias.origenRuido, !creencias.ruidoCerca);
+            investigacionRuidoIniciada = true;
+
+            Debug.Log($"[{gameObject.name}] Investigando ruido en {creencias.origenRuido}");
+        }
+
+        bool terminado = investigate.Ejecutar(this);
+
+        if (terminado)
+        {
+            creencias.escuchandoRuido = false;
+            investigacionRuidoIniciada = false;
+            CambiarIntencion(Deseo.Patrullar);
         }
     }
 
@@ -276,12 +395,6 @@ public class PoliceBrain : MonoBehaviour
 
         List<GOAPAction> acciones = new List<GOAPAction>();
 
-        // Buscar: localiza al ladrón si no sabemos dónde está
-        var buscar = new GOAPAction("Buscar", costo: 5f);
-        buscar.Precondiciones.Add("LadronLocalizado", false);
-        buscar.Efectos.Add("LadronLocalizado", true);
-        acciones.Add(buscar);
-
         // Perseguir: va directo a por él
         var perseguir = new GOAPAction("Perseguir", costo: 3f);
         perseguir.Precondiciones.Add("LadronLocalizado", true);
@@ -291,7 +404,7 @@ public class PoliceBrain : MonoBehaviour
         // Emboscar: más barato, pero requiere que otro agente ya vigile la salida
         var emboscar = new GOAPAction("Emboscar", costo: 1f);
         emboscar.Precondiciones.Add("LadronLocalizado", true);
-        emboscar.Precondiciones.Add("SalidaVigilada",   true);
+        emboscar.Precondiciones.Add("SalidaVigilada", true);
         emboscar.Efectos.Add("LadronAtrapado", true);
         acciones.Add(emboscar);
 
@@ -352,25 +465,91 @@ public class PoliceBrain : MonoBehaviour
     }
 
     void EjecutarComportamientoPorRol()
+    {
+        switch (creencias.rolAsignado)
         {
-            switch (creencias.rolAsignado)
-            {
-                case "Investigar":
-                    if (search != null)
+            case "Investigar":
+                if (search != null)
+                {
+                    bool terminado = search.Ejecutar(this);
+
+                    if (terminado)
+                        TerminarRolCoordinado("Investigacion");
+                }
+                else
+                {
+                    AsignarRol("");
+                }
+                break;
+
+            case "VigilarSalida":
+                if (guardExit != null)
+                {
+                    bool salidaRevisada = guardExit.Ejecutar(this);
+
+                    if (salidaRevisada)
+                        TerminarRolCoordinado("Salida");
+                }
+                else
+                {
+                    AsignarRol("");
+                }
+                break;
+
+            case "VigilarLlave":
+                if (checkKey != null)
+                {
+                    bool terminado = checkKey.Ejecutar(this);
+
+                    if (terminado)
                     {
-                        bool terminado = search.Ejecutar(this);
-                        // Si ya ha investigado la zona por el aviso FIPA, borramos el rol
-                        if (terminado) AsignarRol(""); 
+                        if (!checkKey.LlaveSigueEnSuSitio)
+                        {
+                            MessageRouter.ReforzarSalida(this);
+                        }
+                        else
+                        {
+                            AsignarRol("VigilarLlave");
+                        }
                     }
-                    break;
-                case "VigilarSalida":
-                    if (guardExit != null) guardExit.Ejecutar(this);
-                    break;
-                case "VigilarLlave":
-                    if (checkKey != null) checkKey.Ejecutar(this);
-                    break;
-            }
+                }
+                else
+                {
+                    AsignarRol("");
+                }
+                break;
+
+            case "VigilarBotones":
+                if (guardButtons != null)
+                {
+                    bool botonesRevisados = guardButtons.Ejecutar(this);
+
+                    if (botonesRevisados)
+                        TerminarRolCoordinado("Botones");
+                }
+                else
+                {
+                    AsignarRol("");
+                }
+                break;
+
+            default:
+                AsignarRol("");
+                break;
         }
+    }
+
+    private void TerminarRolCoordinado(string zona)
+    {
+        if (MessageRouter.BusquedaCoordinadaActiva && communicator != null)
+        {
+            communicator.InformarZonaDespejada(zona);
+        }
+        else
+        {
+            AsignarRol("");
+        }
+    }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -383,7 +562,10 @@ public class PoliceBrain : MonoBehaviour
         accionEnEjecucion = null;
         planFallido       = false; // nuevo estado = nueva oportunidad de planificar
 
+        if (nueva != Deseo.InvestigarRuido) investigacionRuidoIniciada = false;
         if (Agent != null) Agent.ResetPath();
+
+        Debug.Log($"[{gameObject.name}] Nueva intención: {intencionActual}");
     }
 
     public void AsignarRol(string nuevoRol)

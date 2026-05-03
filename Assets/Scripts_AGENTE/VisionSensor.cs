@@ -67,10 +67,11 @@ public class VisionSensor : MonoBehaviour
         Vector3 target = jugador.position + Vector3.up * 1.0f;
         Vector3 dir = (target - origin).normalized;
 
-        RaycastHit hit;
-        if (Physics.Raycast(origin, dir, out hit, viewRadius, ~0, QueryTriggerInteraction.Ignore))
+        float distanciaAlJugador = Vector3.Distance(origin, target);
+
+        if (Physics.Raycast(origin, dir, distanciaAlJugador, obstacleMask, QueryTriggerInteraction.Ignore))
         {
-            if (hit.transform != jugador) return;
+            return;
         }
 
         CanSeePlayer = true;

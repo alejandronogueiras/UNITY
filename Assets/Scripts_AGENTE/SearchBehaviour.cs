@@ -28,6 +28,9 @@ public class SearchBehaviour : MonoBehaviour
     // El GOAP llama a esto en cada frame
     public bool Ejecutar(PoliceBrain brain)
     {
+        if (brain == null || brain.Agent == null)
+            return true;
+            
         // Si ya terminamos, no hacemos nada más
         if (busquedaCompletada) return true;
 

@@ -10,24 +10,29 @@ public class ChaseBehaviour : MonoBehaviour
 
     public bool Ejecutar(PoliceBrain brain)
     {
+        if (brain == null || brain.Agent == null)
+            return true;
+
         brain.Agent.speed = velocidadPersecucion;
         brain.Agent.isStopped = false;
         brain.Agent.stoppingDistance = 0.2f; 
 
-        if (jugador != null)
+        if (jugador != null && brain.creencias.jugadorDetectado)
         {
             brain.Agent.SetDestination(jugador.position);
 
             float distancia = Vector3.Distance(transform.position, jugador.position);
-            
+
             if (distancia <= distanciaCaptura)
             {
                 Debug.Log($"¡{gameObject.name} te ha atrapado!");
-                // GameManager.instance.Perder(); 
-                return true; // Acción GOAP de persecución terminada con éxito
+                // GameManager.instance.Perder();
+                return true;
             }
+
+            return false;
         }
 
-        return false; // Seguimos persiguiendo
+        return true; // Si no lo ve, termina la acción
     }
 }

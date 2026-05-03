@@ -85,6 +85,10 @@ public static class GOAPPlanner
                 // Si ya evaluamos este estado de forma más eficiente, lo saltamos
                 if (closedList.Any(n => DiccionariosIguales(n.Estado, vecino.Estado))) continue;
 
+                // Evitamos añadir estados repetidos a openList si ya existe uno igual con menor o igual coste.
+                if (openList.Any(n => DiccionariosIguales(n.Estado, vecino.Estado) && n.CostoF <= vecino.CostoF))
+                    continue;
+                    
                 openList.Add(vecino);
             }
         }

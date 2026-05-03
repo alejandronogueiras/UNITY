@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.AI;
 
-public class GuardExitBehaviour : MonoBehaviour
+public class GuardButtonsBehaviour : MonoBehaviour
 {
-    public Transform salida;
+    [Header("Zona de botones")]
+    public Transform zonaBotonesCentro;
+    public float zonaBotonesRadio = 6f;
     public float velocidadNormal = 3.5f;
-    public float radioSalida = 6f;
 
     [Header("Revisión")]
     public float tiempoRevision = 4f;
@@ -26,15 +28,15 @@ public class GuardExitBehaviour : MonoBehaviour
         brain.Agent.speed = velocidadNormal;
         brain.Agent.isStopped = false;
 
-        if (salida == null)
+        if (zonaBotonesCentro == null)
         {
-            Debug.LogWarning($"[{RutaCompleta()}] No tiene asignada la salida en GuardExitBehaviour.", this);
+            Debug.LogWarning($"[{RutaCompleta()}] No tiene asignada zonaBotonesCentro en GuardButtonsBehaviour.", this);
             return true;
         }
 
         if (!llegoAlCentro)
         {
-            brain.Agent.SetDestination(salida.position);
+            brain.Agent.SetDestination(zonaBotonesCentro.position);
 
             if (!brain.Agent.pathPending && brain.Agent.remainingDistance < 0.7f)
             {
@@ -49,10 +51,10 @@ public class GuardExitBehaviour : MonoBehaviour
 
         if (!brain.Agent.hasPath || brain.Agent.remainingDistance < 0.7f)
         {
-            Vector3 punto = salida.position + Random.insideUnitSphere * radioSalida;
-            punto.y = salida.position.y;
+            Vector3 punto = zonaBotonesCentro.position + Random.insideUnitSphere * zonaBotonesRadio;
+            punto.y = zonaBotonesCentro.position.y;
 
-            if (UnityEngine.AI.NavMesh.SamplePosition(punto, out UnityEngine.AI.NavMeshHit hit, radioSalida, UnityEngine.AI.NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(punto, out NavMeshHit hit, zonaBotonesRadio, NavMesh.AllAreas))
             {
                 brain.Agent.SetDestination(hit.position);
             }
@@ -60,7 +62,7 @@ public class GuardExitBehaviour : MonoBehaviour
 
         if (timerRevision >= tiempoRevision)
         {
-            Debug.Log($"[{RutaCompleta()}] Salida revisada. No está el ladrón.");
+            Debug.Log($"[{RutaCompleta()}] Zona de botones revisada. No está el ladrón.");
             Reiniciar();
             return true;
         }

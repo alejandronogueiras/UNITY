@@ -19,14 +19,14 @@ public class PlayerLookMove : MonoBehaviour
     public float mouseSensitivity = 2f;
     public float maxLookUp = 80f;
 
-    [Header("Sigilo y Ruido (Pulsos)")]
+    [Header("Sigilo y Ruido")]
     public float radioRuidoNormal = 4f;
     public float radioRuidoSigilo = 2f;
 
     public bool estaEnSigilo = false;
 
-    [HideInInspector] public float radioActual; 
-    [HideInInspector] public float radioRuido;  
+    [HideInInspector] public float radioActual;
+    [HideInInspector] public float radioRuido;
     public bool estaHaciendoRuido = false;
 
     [Header("Configuración de Pasos")]
@@ -36,7 +36,6 @@ public class PlayerLookMove : MonoBehaviour
     [Header("Suelo metálico")]
     public bool enSueloMetalico = false;
     public float multRuidoMetalico = 1f;
-
 
     public float RadioRuidoActual => radioActual * multRuidoMetalico;
 
@@ -50,11 +49,9 @@ public class PlayerLookMove : MonoBehaviour
     private float pitch;
     private float verticalVelocity;
 
-
     private float temporizadorPasos = 0f;
     private float temporizadorPulso = 0f;
 
- 
     private LineRenderer lineaRuido;
 
     void Awake()
@@ -70,7 +67,8 @@ public class PlayerLookMove : MonoBehaviour
         lineaRuido = CrearLineaVisual(Color.yellow);
 
         radioActual = radioRuidoNormal;
-        radioRuido = radioActual;
+
+        radioRuido = RadioRuidoActual;
 
         temporizadorPasos = tiempoEntrePasos;
     }
@@ -81,32 +79,43 @@ public class PlayerLookMove : MonoBehaviour
         Cursor.visible = false;
     }
 
+    void OnDisable()
+    {
+        estaHaciendoRuido = false;
+
+        if (lineaRuido != null)
+            lineaRuido.enabled = false;
+    }
+
     void Update()
     {
-  
-        if (GameManager.instance != null && GameManager.instance.juegoTerminado) return;
+        if (GameManager.instance != null && GameManager.instance.juegoTerminado)
+        {
+            estaHaciendoRuido = false;
+
+            if (lineaRuido != null)
+                lineaRuido.enabled = false;
+
+            return;
+        }
 
         var kb = Keyboard.current;
 
-    
         float velocidadActual = runSpeed;
         radioActual = radioRuidoNormal;
-
-       estaEnSigilo = false;
+        estaEnSigilo = false;
 
         if (kb != null && kb.leftShiftKey.isPressed)
         {
             velocidadActual = runSpeed / 2f;
             radioActual = radioRuidoSigilo;
-            estaEnSigilo = true; 
+            estaEnSigilo = true;
         }
 
-  
-        radioRuido = radioActual;
+        radioRuido = RadioRuidoActual;
 
-
-        float x = 0f; 
-        float y = 0f; 
+        float x = 0f;
+        float y = 0f;
 
         if (kb != null)
         {
@@ -117,12 +126,9 @@ public class PlayerLookMove : MonoBehaviour
             if (kb.sKey.isPressed) y -= 1f;
         }
 
-
         transform.Rotate(0f, x * rotationSpeed * Time.deltaTime, 0f);
 
-
         Vector3 move = transform.forward * (y * velocidadActual);
-
 
         bool seEstaMoviendo = Mathf.Abs(y) > 0.1f;
 
@@ -139,22 +145,24 @@ public class PlayerLookMove : MonoBehaviour
         }
         else
         {
-            temporizadorPasos = tiempoEntrePasos; 
+            temporizadorPasos = tiempoEntrePasos;
         }
 
         if (estaHaciendoRuido)
         {
             temporizadorPulso -= Time.deltaTime;
-            if (temporizadorPulso <= 0f) estaHaciendoRuido = false;
+
+            if (temporizadorPulso <= 0f)
+                estaHaciendoRuido = false;
         }
 
- 
         if (lineaRuido != null)
         {
             lineaRuido.enabled = estaHaciendoRuido;
-            if (estaHaciendoRuido) DibujarCirculo(lineaRuido, RadioRuidoActual);
-        }
 
+            if (estaHaciendoRuido)
+                DibujarCirculo(lineaRuido, radioRuido);
+        }
 
         if (cc.isGrounded && verticalVelocity < 0f)
             verticalVelocity = -1f;
@@ -166,7 +174,6 @@ public class PlayerLookMove : MonoBehaviour
 
         if (animator != null)
         {
-
             animator.SetFloat(velXParam, 0f);
             animator.SetFloat(velYParam, y);
         }
@@ -181,6 +188,7 @@ public class PlayerLookMove : MonoBehaviour
             float look = delta.y * mouseSensitivity * Time.deltaTime * 60f;
             pitch -= look;
             pitch = Mathf.Clamp(pitch, -maxLookUp, maxLookUp);
+
             cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
         }
 
@@ -201,6 +209,7 @@ public class PlayerLookMove : MonoBehaviour
         lr.endColor = color;
         lr.useWorldSpace = true;
         lr.loop = true;
+        lr.enabled = false;
         return lr;
     }
 

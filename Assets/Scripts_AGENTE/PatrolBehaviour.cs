@@ -53,12 +53,22 @@ public class PatrolBehaviour : MonoBehaviour
         }
     }
 
+    public void ReiniciarDestino()
+    {
+        tieneDestino = false;
+        waitTimer = 0f;
+
+        if (agent != null)
+            agent.ResetPath();
+    }
+
     void IrANuevoPunto()
     {
         PatrolZone zona = ElegirZona();
         if (zona == null || zona.centro == null) return;
 
         Vector3 punto = zona.centro.position + Random.insideUnitSphere * zona.radio;
+        punto.y = zona.centro.position.y;
 
         if (NavMesh.SamplePosition(punto, out NavMeshHit hit, zona.radio, NavMesh.AllAreas))
         {
